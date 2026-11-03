@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "fixture": {
+      "command": "python",
+      "args": ["scripts/mcp_fixture.py"],
+      "_comment": "issue 数据源；路径相对工作区根，不写死绝对路径"
+    },
+    "git": {
+      "command": "python",
+      "args": ["scripts/mcp_git.py"],
+      "_comment": "只读 git：status / diff / log，不会 commit 或 push"
+    }
+  }
+}
