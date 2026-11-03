@@ -1,0 +1,15 @@
+# 常驻能力的最小配置：到点唤醒一次，跑完记 last_run，不会重复执行。
+# 真正接模型时，把 action 换成一条 prompt 即可。
+routines:
+  - name: 每日自检
+    every_seconds: 86400
+    prompt: 跑一遍 sample 的测试，把红的原因总结成三行
+
+  - name: 每小时看 diff
+    every_seconds: 3600
+    prompt: 审一下当前未提交的改动，只报告问题
+
+  - name: 每周发版
+    every_seconds: 604800
+    enabled: false
+    prompt: 打 tag 并生成 release notes
