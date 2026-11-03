@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Desktop Agent · 工作台</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ───────────────── 左栏：历史会话 ───────────────── -->
+  <aside class="sidebar" aria-label="历史会话">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div class="brand-text">
+        <strong>Desktop Agent</strong>
+        <small>本机编程助手</small>
+      </div>
+    </div>
+
+    <button class="btn-new" id="newChat" type="button">
+      <span class="plus" aria-hidden="true">+</span> 新建会话
+    </button>
+
+    <div class="sidebar-scroll">
+      <nav class="sessions" id="sessionList" aria-label="会话列表"></nav>
+    </div>
+
+    <div class="sidebar-foot">
+      <button class="conn" id="connBtn" type="button" title="点击重新连接">
+        <span class="dot" id="connDot" data-state="off"></span>
+        <span id="connText">未连接</span>
+      </button>
+      <div class="foot-model" id="modelName">模型 —</div>
+      <button class="btn-cfg" id="cfgBtn" type="button">配置 Key</button>
+    </div>
+  </aside>
+
+  <!-- ───────────────── 中栏：对话与工具轨迹 ───────────────── -->
+  <main class="chat" aria-label="对话">
+    <header class="chat-head">
+      <div class="chat-title-wrap">
+        <h1 id="chatTitle">新会话</h1>
+        <p class="chat-sub" id="rootPath">工作区 —</p>
+      </div>
+      <div class="run-stats">
+        <span class="pill" id="stepPill">步数 0</span>
+        <span class="pill" id="tokenPill">tokens 0</span>
+      </div>
+    </header>
+
+    <section class="messages" id="messages" aria-live="polite" aria-label="消息流"></section>
+
+    <footer class="composer">
+      <div class="composer-box">
+        <textarea id="prompt" rows="1" placeholder="说说要做什么…（Enter 发送，Shift+Enter 换行）" aria-label="输入任务"></textarea>
+        <div class="composer-actions">
+          <button class="btn-stop" id="stopBtn" type="button" disabled>停止</button>
+          <button class="btn-send" id="sendBtn" type="button">发送</button>
+        </div>
+      </div>
+      <div class="hint">工具调用、退出码、失败原因都显示在中间的轨迹里；Esc 可中断</div>
+    </footer>
+  </main>
+
+  <!-- ───────────────── 右栏：版本堆叠 + 护栏 ───────────────── -->
+  <aside class="panel" aria-label="版本与护栏">
+    <div class="panel-head">
+      <h2>版本堆叠</h2>
+      <span class="tag">完成即入栈</span>
+    </div>
+    <div class="stack" id="stack"></div>
+
+    <div class="panel-head">
+      <h2>护栏</h2>
+      <span class="tag" id="guardTag">读取中</span>
+    </div>
+    <dl class="guards" id="guards"></dl>
+
+    <div class="panel-foot">
+      历史会话为界面演示数据；工具轨迹、版本入栈、护栏参数来自真实运行。
+    </div>
+  </aside>
+
+</div>
+
+<dialog class="cfg-dialog" id="cfgDialog">
+  <form id="cfgForm">
+    <h2>连接模型</h2>
+    <p class="cfg-hint">Key 只写到本机 <code>~/.desktop-agent/.env</code>，不会进仓库。</p>
+    <label>API Key
+      <input id="cfgKey" type="password" autocomplete="off" placeholder="sk-…" required>
+    </label>
+    <label>Base URL
+      <input id="cfgBase" type="text" placeholder="https://api.openai.com/v1">
+    </label>
+    <label>模型
+      <input id="cfgModel" type="text" placeholder="gpt-4o-mini">
+    </label>
+    <div class="cfg-actions">
+      <button type="button" class="btn-stop" id="cfgCancel">取消</button>
+      <button type="submit" class="btn-send" id="cfgSave">保存并测试</button>
+    </div>
+    <p class="cfg-msg" id="cfgMsg"></p>
+  </form>
+</dialog>
+
+<script src="/app.js"></script>
+</body>
+</html>
