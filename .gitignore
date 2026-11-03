@@ -1,0 +1,18 @@
+.env
+.env.local
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+dist/
+build/
+*.egg-info/
+.trace/
+
+# 运行状态（checkpoint / 通知日志）
+.agent/
+
+# 运行日志
+server.log
+server.err
+*.log

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "desktop-agent"
+version = "1.3.0"
+description = "桌面智能体：循环 + 四个工具 + 技能 + hooks + MCP + 桌面窗口"
+requires-python = ">=3.10"
+dependencies = [
+    "requests==2.32.3",
+    "fastapi==0.115.6",
+    "uvicorn==0.34.0",
+    "websockets==15.0",
+    "PyYAML==6.0.2",
+]
+
+[project.optional-dependencies]
+# 只有要双击出窗口时才装；CLI / 验收命令不依赖它
+desktop = ["pywebview==6.2.1"]
+build = ["pyinstaller==6.22.3"]
+
+[project.scripts]
+desktop-agent = "agent.cli:main"
+
+[tool.setuptools]
+packages = ["agent"]
