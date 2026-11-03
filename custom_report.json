@@ -1,0 +1,34 @@
+{
+  "agents_md": {
+    "found": true,
+    "bytes": 1922,
+    "layers": [
+      "project"
+    ]
+  },
+  "denied": [
+    {
+      "tool": "write",
+      "path": ".env",
+      "reason": "密钥不入库，用环境变量"
+    },
+    {
+      "tool": "bash",
+      "command": "rm -rf build/",
+      "reason": "递归强制删除不可逆"
+    }
+  ],
+  "autotest": {
+    "runs": 2,
+    "red": 1,
+    "green": 1,
+    "red_to_green": 1,
+    "injected_lines": 2
+  },
+  "reviewer": {
+    "runs": 2,
+    "issues_found": 3,
+    "main_context_delta": 138,
+    "subagent_tokens": 264
+  }
+}

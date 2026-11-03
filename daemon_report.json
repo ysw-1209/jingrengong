@@ -1,0 +1,15 @@
+{
+  "triggers_fired": 2,
+  "resume_from_step": 4,
+  "notify_fired": true,
+  "idempotent": true,
+  "detail": {
+    "killed": true,
+    "steps_done_after_resume": 5,
+    "first_fired": [
+      "每日自检",
+      "每小时看 diff"
+    ],
+    "second_fired": []
+  }
+}
