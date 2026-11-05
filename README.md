@@ -86,6 +86,15 @@ WebSocket 会话结构：**一条连接三个任务，recv 只收、send 只发�
 
 界面的历史会话是假的，但**工具轨迹、版本入栈、护栏参数都来自真实运行**——演示时别把这两件事混着讲。
 
+| 三栏界面（右栏可见护栏与 MCP 名单） | 工具轨迹（真模型 read 调用，引用了 AGENTS.md 约定） |
+|---|---|
+| ![三栏界面](docs/screenshots/01-三栏界面.png) | ![工具轨迹](docs/screenshots/02-工具轨迹.png) |
+
+![MCP 调用](docs/screenshots/03-MCP调用.png)
+▲ 黄色 `S use_skill` 是技能命中，蓝色 `M fixture · get_issue` 是 MCP 工具——模型先调技能取步骤，再按步骤调 MCP 拿数据。完整演示见 [Release 附件 demo.mp4](https://github.com/ysw-1209/jingrengong/releases/download/v1.0.0/demo.mp4)（含一次真实中断）。
+
+现场演示脚本（对照作业要求的两场 5 分钟）见 [docs/demo.md](docs/demo.md)。
+
 ## 技能系统（渐进披露）
 
 `skills/` 下三个技能，三种形态：
