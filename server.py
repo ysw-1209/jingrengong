@@ -69,11 +69,25 @@ def set_config(payload: dict) -> JSONResponse:
 
     path = user_env_path()
     path.parent.mkdir(parents=True, exist_ok=True)
+
+    # 已有的 base_url / model 必须保留：界面弹窗里这两栏留空是常态，
+    # 不能因为只改 Key 就把厂商地址冲掉（踩过：DeepSeek 地址被覆盖，401）
+    old = {}
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                old[k.strip()] = v.strip()
+
+    base_url = str(payload.get("base_url") or "").strip() or old.get("OPENAI_BASE_URL", "")
+    model = str(payload.get("model") or "").strip() or old.get("OPENAI_MODEL", "")
+
     lines = [f"OPENAI_API_KEY={key}"]
-    if payload.get("base_url"):
-        lines.append(f"OPENAI_BASE_URL={str(payload['base_url']).strip()}")
-    if payload.get("model"):
-        lines.append(f"OPENAI_MODEL={str(payload['model']).strip()}")
+    if base_url:
+        lines.append(f"OPENAI_BASE_URL={base_url}")
+    if model:
+        lines.append(f"OPENAI_MODEL={model}")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     try:
         os.chmod(path, 0o600)          # 能设就设，Windows 上无效也不报错
@@ -82,10 +96,10 @@ def set_config(payload: dict) -> JSONResponse:
 
     # 立刻生效，不用重启
     os.environ["OPENAI_API_KEY"] = key
-    if payload.get("base_url"):
-        os.environ["OPENAI_BASE_URL"] = str(payload["base_url"]).strip().rstrip("/")
-    if payload.get("model"):
-        os.environ["OPENAI_MODEL"] = str(payload["model"]).strip()
+    if base_url:
+        os.environ["OPENAI_BASE_URL"] = base_url.rstrip("/")
+    if model:
+        os.environ["OPENAI_MODEL"] = model
 
     return JSONResponse({"ok": True, "path": str(path)})
 
