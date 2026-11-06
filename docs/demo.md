@@ -27,8 +27,8 @@
 
 | 时间 | 动作 | 命令 / 证据 |
 |---|---|---|
-| 30 秒 | `ls skills/` 讲三个技能 | `run-tests`（纯提示词）/ `review-diff`（带脚本）/ `fetch-issue`（带 MCP） |
-| 90 秒 | 关技能 vs 开技能跑同一任务 | `ENABLE_SKILLS=0 …` 对比工具调用轮数；`skill_report.json`：ratio 6.4、8 条 trials、误触发 0 |
+| 30 秒 | `ls skills/` 讲四个技能 | `run-tests` / `explain-code`（纯提示词）/ `review-diff`（带脚本）/ `fetch-issue`（带 MCP） |
+| 90 秒 | 关技能 vs 开技能跑同一任务 | `ENABLE_SKILLS=0 …` 对比工具调用轮数；`skill_report.json`：ratio 6.6、10 条 trials、误触发 0 |
 | 60 秒 | 写 `.env` 被拒、`rm -rf` 被拒 | `agent/hooks.py` 的 `pre()`：拒绝 + 理由 + 替代方案（`git clean -nd` / `git revert`） |
 | 60 秒 | 故意改错看红灯回注 | `custom_report.json`：`red_to_green: 1`，回注只有 2 行（用例 + 断言） |
 | 30 秒 | reviewer 报了什么 | `python -m agent.inspect custom`：五条清单 3 个问题，主上下文只增加 138 字符 |
@@ -99,13 +99,13 @@ server，走 stdio JSON-RPC；模型眼里的 `mcp__fixture__get_issue` 和内�
 
 ## 演示二（增量作业 5 分钟）
 
-**30 秒 · 三个技能**
+**30 秒 · 四个技能**
 
 ```powershell
 Get-ChildItem skills
 ```
 三个目录 = 三种形态：`run-tests` 纯提示词、`review-diff` 带脚本、`fetch-issue` 带 MCP。
-顺嘴说目录只常驻 178 token，正文 1134，ratio 6.4。
+顺嘴说目录只常驻 224 token，正文 1481，ratio 6.6。
 
 **90 秒 · 关技能 vs 开技能**
 
@@ -117,7 +117,7 @@ $env:ENABLE_SKILLS="0"; python -m agent.cli --root samples "给 samples/stats.py
 $env:ENABLE_SKILLS="1"; python -m agent.cli --root samples "给 samples/stats.py 补测试并跑一遍"
 ```
 
-看末尾 `steps` 数字对比；`skill_report.json` 里 8 条 trials、误触发 0 是兜底证据。
+看末尾 `steps` 数字对比；`skill_report.json` 里 10 条 trials、误触发 0 是兜底证据。
 
 **60 秒 · 两条 hook 拒绝**（在窗口输入框里打）
 

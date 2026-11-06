@@ -1,6 +1,11 @@
 {
   "skills": [
     {
+      "name": "explain-code",
+      "has_scripts": false,
+      "uses_mcp": false
+    },
+    {
       "name": "fetch-issue",
       "has_scripts": false,
       "uses_mcp": true
@@ -16,9 +21,9 @@
       "uses_mcp": false
     }
   ],
-  "catalog_tokens": 178,
-  "full_tokens": 1134,
-  "disclosure_ratio": 6.4,
+  "catalog_tokens": 224,
+  "full_tokens": 1481,
+  "disclosure_ratio": 6.6,
   "trials": [
     {
       "query": "帮我跑一下测试",
@@ -54,6 +59,18 @@
       "query": "抓一下 issue 1",
       "expected": "fetch-issue",
       "hit": "fetch-issue",
+      "ok": true
+    },
+    {
+      "query": "给新人讲讲这段代码怎么读",
+      "expected": "explain-code",
+      "hit": "explain-code",
+      "ok": true
+    },
+    {
+      "query": "逐行讲解一下 stats.py 的思路",
+      "expected": "explain-code",
+      "hit": "explain-code",
       "ok": true
     },
     {

@@ -13,7 +13,7 @@
 |---|---|---|
 | 智能体循环 | 决策 → 动作 → 观察 → 再决策，生成器产出事件流 | 失败→恢复闭环见 `docs/trace.md` |
 | 四个工具 | read / write / edit / bash，带三道护栏（步数 / 预算 / 超时） | `python -m agent.selftest` 5/5 |
-| 技能系统 | 渐进披露：目录常驻，正文按需注入 | `disclosure_ratio = 6.4`，误触发 0 |
+| 技能系统 | 渐进披露：目录常驻，正文按需注入 | `disclosure_ratio = 6.6`，误触发 0 |
 | 定制层 | AGENTS.md 双层注入 + 三条 hook + reviewer 子 agent | 主上下文只增加 138 字符 |
 | MCP | stdio / JSON-RPC 客户端，多 server 聚合 | 2 个 server、4 个工具真实调通 |
 | 常驻（选做） | checkpoint 续跑 + 定时触发 | `resume_from_step = 4` |
@@ -97,16 +97,17 @@ WebSocket 会话结构：**一条连接三个任务，recv 只收、send 只发�
 
 ## 技能系统（渐进披露）
 
-`skills/` 下三个技能，三种形态：
+`skills/` 下四个技能，三种形态：
 
 | 技能 | 形态 | 验证什么 |
 |---|---|---|
 | `run-tests` | 纯提示词 | 只靠流程描述就能生效 |
 | `review-diff` | 提示词 + `scripts/collect_diff.py` | 脚本能被 bash 调起来 |
 | `fetch-issue` | 提示词 + MCP 工具 | 技能能编排已接好的 MCP |
+| `explain-code` | 纯提示词 | 第 4 个技能：验证加载器按目录自动发现，不用改代码 |
 
-启动时 system prompt 里只有 **178 token 的目录**（name + description），正文要等模型调
-`use_skill(name)` 才注入。三个技能正文合计 1134 token，`disclosure_ratio = 6.4`。
+启动时 system prompt 里只有 **224 token 的目录**（name + description），正文要等模型调
+`use_skill(name)` 才注入。四个技能正文合计 1481 token，`disclosure_ratio = 6.6`。
 触发靠 description 里的引号短语（"跑一下测试"、"审一遍"、"看看这个 issue"），
 所以"今天天气怎么样"不会点燃 `run-tests`。
 
@@ -162,7 +163,7 @@ python -m agent.inspect daemon     # 输出 resume_from_step: 4、triggers_fired
 
 ```bash
 python -m agent.selftest                              # 5 项冒烟，10 秒
-python -m agent.inspect skills --out skill_report.json   # ratio 6.4 / 8 条 trials / 误触发 0
+python -m agent.inspect skills --out skill_report.json   # ratio 6.6 / 10 条 trials / 误触发 0
 python -m agent.inspect custom --out custom_report.json  # red_to_green 1 / delta 138 / denied 2
 python -m agent.inspect daemon --out daemon_report.json  # resume 4 / fired 2 / idempotent
 ```
@@ -201,7 +202,7 @@ desktop-agent/
 ├── server.py         FastAPI：/health、/stream、/config、/ws
 ├── desktop.py        pywebview 桌面入口（工作区准备 + Key 配置）
 ├── ui/               三栏界面：index.html + style.css + app.js（无构建）
-├── skills/           三个技能（run-tests / review-diff / fetch-issue）
+├── skills/           四个技能（run-tests / review-diff / fetch-issue / explain-code）
 ├── scripts/          技能与 MCP 的辅助脚本（collect_diff / mcp_fixture / mcp_git）
 ├── mcp.json          MCP server 声明
 ├── routines.yaml     定时任务配置

@@ -21,7 +21,7 @@ from .reviewer import review
 from .skills import catalog_text, estimate_tokens, load_skills, match_skill
 from .tools import ToolResult, tool_edit
 
-# 六条真话 + 两条不该触发。中文写法来自真实对话，不是术语。
+# 七条真话 + 两条不该触发。中文写法来自真实对话，不是术语。
 TRIALS = [
     ("帮我跑一下测试", "run-tests"),
     ("测试挂了，为什么", "run-tests"),
@@ -29,6 +29,8 @@ TRIALS = [
     ("review 一下我这次的改动", "review-diff"),
     ("看看这个 issue 说了什么", "fetch-issue"),
     ("抓一下 issue 1", "fetch-issue"),
+    ("给新人讲讲这段代码怎么读", "explain-code"),
+    ("逐行讲解一下 stats.py 的思路", "explain-code"),
     ("今天天气怎么样", None),
     ("帮我把这个函数改成异步", None),
 ]
