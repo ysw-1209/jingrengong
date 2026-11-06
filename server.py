@@ -18,6 +18,7 @@ from fastapi.staticfiles import StaticFiles
 
 from agent.config import Settings, user_env_path
 from agent.loop import run_agent
+from agent.skills import load_skills
 
 ROOT = Path(__file__).parent
 UI_DIR = ROOT / "ui"
@@ -32,6 +33,12 @@ def current_settings() -> Settings:
 # --------------------------------------------------------------------------- #
 # 健康检查：先看灯泡有没有电
 # --------------------------------------------------------------------------- #
+def _skill_names(root) -> list[str]:
+    """技能名单：只扫目录读 front matter，不注入正文——health 秒回。"""
+    skills, _errors = load_skills(root)
+    return [sk.name for sk in skills]
+
+
 def _mcp_servers() -> list[str]:
     """只读 mcp.json 里的名字，不启动子进程——health 应该秒回。"""
     try:
@@ -55,6 +62,7 @@ def health() -> JSONResponse:
         "bash_timeout": s.bash_timeout,
         "has_key": bool(s.api_key),
         "mcp_servers": _mcp_servers(),
+        "skills": _skill_names(s.root),
     })
 
 

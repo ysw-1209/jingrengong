@@ -385,6 +385,7 @@ async function loadHealth() {
       ['单步超时', j.step_timeout ? `${j.step_timeout} s` : '—'],
       ['bash 超时', j.bash_timeout ? `${j.bash_timeout} s` : '—'],
       ['MCP server', (j.mcp_servers || []).join(' · ') || '未接入'],
+      ['技能', (j.skills || []).join(' · ') || '未加载'],
       ['工作区', j.root],
     ]);
   } catch (e) {
