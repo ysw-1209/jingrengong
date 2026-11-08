@@ -1,7 +1,8 @@
 'use strict';
 
 /* 界面只做两件事：把 ws 事件画出来、把用户意图发回去。
-   历史会话是界面演示数据；工具轨迹 / 版本入栈 / 护栏参数都来自真实运行。 */
+   会话标题/步数持久化在 localStorage（刷新不丢）；对话消息本身没有落库，
+   点开旧会话会如实提示。工具轨迹 / 版本入栈 / 护栏参数都来自真实运行。 */
 
 const $ = (id) => document.getElementById(id);
 
@@ -44,26 +45,55 @@ function toolMeta(name) {
   return TOOL_META[name] || { icon: '?', label: name || 'tool', kind: 'other' };
 }
 
-const DEMO_SESSIONS = [
-  {
-    when: '今天',
-    items: [
-      { id: 'd1', title: '修 stats.py 空列表的 bug', meta: '2 步 · 完成' },
-      { id: 'd2', title: '给 server.py 加 /stream 端点', meta: '6 步 · 完成' },
-    ],
-  },
-  {
-    when: '昨天',
-    items: [
-      { id: 'd3', title: '排查 ws 第二次连不上', meta: '11 步 · 完成' },
-      { id: 'd4', title: '跑 samples 的 6 个测试', meta: '3 步 · 完成' },
-    ],
-  },
-  {
-    when: '更早',
-    items: [{ id: 'd5', title: '重构 tools.py 的路径校验', meta: '8 步 · 中断' }],
-  },
-];
+/* ───────────────── 会话持久化（localStorage） ─────────────────
+   只存标题 / 步数 / 结果状态 / 时间，消息内容不落库——所以点开旧会话
+   能看到当时做了什么，看不到对话全文，提示里写清楚。 */
+
+const SESS_KEY = 'da.sessions.v1';
+const SESS_MAX = 30;
+
+function loadSessions() {
+  try {
+    const list = JSON.parse(localStorage.getItem(SESS_KEY) || '[]');
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSessions() {
+  try {
+    localStorage.setItem(SESS_KEY, JSON.stringify(SESSIONS.slice(0, SESS_MAX)));
+  } catch { /* 隐私模式等场景存不进去就算了，不影响运行 */ }
+}
+
+let SESSIONS = loadSessions();
+
+/* 新会话发消息时创建，任务结束时更新结果状态 */
+function upsertSession(id, title, meta, status) {
+  if (!id) return;
+  const found = SESSIONS.find((s) => s.id === id);
+  if (found) {
+    found.title = title;
+    found.meta = meta;
+    found.status = status;
+    found.ts = Date.now();
+  } else {
+    SESSIONS.unshift({ id, title, meta, status, ts: Date.now() });
+  }
+  saveSessions();
+  renderSessions();
+}
+
+function dayLabel(ts) {
+  const one = 24 * 60 * 60 * 1000;
+  const start = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diff = start(new Date()) - start(new Date(ts));
+  if (diff < one) return '今天';
+  if (diff < 2 * one) return '昨天';
+  return '更早';
+}
+
 
 const state = {
   ws: null,
@@ -75,6 +105,7 @@ const state = {
   turn: null,
   versions: [],
   titleLocked: false,
+  sessionId: null, // localStorage 会话 id，新建/点开旧会话时生成或沿用
   pending: new Map(), // call_id -> 工具卡片
   lastPending: null,
 };
@@ -275,14 +306,17 @@ function finishTurn(kind, ev) {
     updateStats();
     if (turn) pushVersion(turn, ev);
     addNote('ok', `完成 · 共 ${(ev && ev.steps) || 0} 步`);
+    upsertSession(state.sessionId, el.chatTitle.textContent, `${state.steps} 步 · 完成`, 'done');
   } else if (kind === 'cancelled') {
     state.steps = ev && ev.steps != null ? ev.steps : state.steps;
     updateStats();
     if (turn) pushVersion(turn, { steps: (ev && ev.steps) || 0, tokens: state.tokens }, '中断');
     addNote('warn', `已中断 · 停在第 ${(ev && ev.steps) || 0} 步，没有继续跑`);
+    upsertSession(state.sessionId, el.chatTitle.textContent, `${state.steps} 步 · 已中断`, 'stop');
   } else if (kind === 'error') {
     addNote('err', `失败 · ${(ev && ev.message) || '未知错误'}`);
     if (turn) pushVersion(turn, { steps: (ev && ev.steps) || 0, tokens: state.tokens }, '失败');
+    upsertSession(state.sessionId, el.chatTitle.textContent, '失败', 'err');
   } else if (kind === 'disconnected') {
     addNote('err', '连接中断，本轮状态未知');
   }
@@ -399,19 +433,30 @@ async function loadHealth() {
 
 function renderSessions() {
   el.sessionList.textContent = '';
-  DEMO_SESSIONS.forEach((group) => {
-    el.sessionList.appendChild(h('div', 'sess-group', group.when));
-    group.items.forEach((item) => {
-      const btn = h('button', 'sess');
-      btn.type = 'button';
-      btn.append(h('span', 'sess-title', item.title), h('span', 'sess-meta', item.meta));
-      btn.onclick = () => openDemo(item, btn);
-      el.sessionList.appendChild(btn);
-    });
+  if (!SESSIONS.length) {
+    el.sessionList.appendChild(
+      h('div', 'sess-group', '暂无历史会话 · 发一条消息就有了'),
+    );
+    return;
+  }
+  /* 按 今天/昨天/更早 分组，保持时间倒序 */
+  let lastLabel = null;
+  SESSIONS.forEach((item) => {
+    const label = dayLabel(item.ts);
+    if (label !== lastLabel) {
+      el.sessionList.appendChild(h('div', 'sess-group', label));
+      lastLabel = label;
+    }
+    const btn = h('button', 'sess');
+    btn.type = 'button';
+    if (item.id === state.sessionId) btn.classList.add('active');
+    btn.append(h('span', 'sess-title', item.title), h('span', 'sess-meta', item.meta));
+    btn.onclick = () => openSaved(item, btn);
+    el.sessionList.appendChild(btn);
   });
 }
 
-function openDemo(item, btn) {
+function openSaved(item, btn) {
   if (state.running) {
     addNote('warn', '当前任务还在跑，先停止再切换');
     return;
@@ -420,6 +465,7 @@ function openDemo(item, btn) {
   btn.classList.add('active');
 
   state.titleLocked = true;
+  state.sessionId = item.id;
   state.turn = null;
   state.versions = [];
   state.steps = Number((/\d+/.exec(item.meta) || ['0'])[0]);
@@ -429,7 +475,7 @@ function openDemo(item, btn) {
   updateStats();
   renderStack();
   el.messages.textContent = '';
-  addNote('warn', '演示会话：历史消息没有落库，这里只展示界面骨架；发一条新消息就会开始真实运行。');
+  addNote('warn', '历史会话只保存了标题和步数（localStorage），对话内容没有落库；在这里发新消息会接着这个会话继续。');
   el.prompt.focus();
 }
 
@@ -439,6 +485,7 @@ function newSession() {
     return;
   }
   state.titleLocked = false;
+  state.sessionId = `s${Date.now()}`;
   state.turn = null;
   state.versions = [];
   state.steps = 0;
@@ -446,6 +493,7 @@ function newSession() {
 
   el.chatTitle.textContent = '新会话';
   el.sessionList.querySelectorAll('.sess').forEach((b) => b.classList.remove('active'));
+  renderSessions();
   updateStats();
   renderStack();
   renderWelcome();
@@ -510,6 +558,8 @@ function send() {
     el.chatTitle.textContent = text.slice(0, 26);
     state.titleLocked = true;
   }
+  if (!state.sessionId) state.sessionId = `s${Date.now()}`;
+  upsertSession(state.sessionId, el.chatTitle.textContent, '运行中', 'run');
 
   state.turn = { prompt: text, ai: null, tools: [] };
   state.pending.clear();
