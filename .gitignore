@@ -16,3 +16,4 @@ build/
 server.log
 server.err
 *.log
+dist_new/
